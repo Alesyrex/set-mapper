@@ -15,22 +15,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class EmployeeSetMapper implements SetMapper<Set<Employee>> {
+    public static final String ID = "id";
+    public static final String MANAGER = "manager";
+    public static final String FIRSTNAME = "firstname";
+    public static final String MIDDLENAME = "middlename";
+    public static final String LASTNAME = "lastname";
+    public static final String POSITION = "position";
+    public static final String HIREDATE = "hiredate";
+    public static final String SALARY = "salary";
+    public static final String EXCEPTION_LOG_FORMAT = "Exception: ";
+
     private static final Logger LOGGER = Logger.getLogger(EmployeeSetMapper.class.getName());
-    private static final String ID = "id";
 
     public Employee getEmployee (ResultSet resultSet) throws SQLException {
         Employee manager = null;
-        BigDecimal idManager = resultSet.getBigDecimal("manager");
+        BigDecimal managerId = resultSet.getBigDecimal(MANAGER);
         if (!resultSet.wasNull()) {
-            manager = getManager(idManager, resultSet);
+            manager = getManager(managerId, resultSet);
         }
         BigInteger id = resultSet.getBigDecimal(ID).toBigInteger();
-        FullName fullName = new FullName(resultSet.getString("firstname"),
-                resultSet.getString("lastname"), resultSet.getString("middlename"));
-        Position position = Position.valueOf(resultSet.getString("position"));
-        LocalDate hired = resultSet.getDate("hiredate").toLocalDate();
+        FullName fullName = new FullName(resultSet.getString(FIRSTNAME),
+                resultSet.getString(LASTNAME), resultSet.getString(MIDDLENAME));
+        Position position = Position.valueOf(resultSet.getString(POSITION));
+        LocalDate hired = resultSet.getDate(HIREDATE).toLocalDate();
         return new Employee(id, fullName, position,
-                hired, resultSet.getBigDecimal("salary"), manager);
+                hired, resultSet.getBigDecimal(SALARY), manager);
     }
 
     public Employee getManager (BigDecimal idManager, ResultSet res) throws SQLException {
@@ -48,15 +57,14 @@ public class EmployeeSetMapper implements SetMapper<Set<Employee>> {
     }
 
     @Override
-    public Set<Employee> mapSet(ResultSet resultSet) throws SQLException {
+    public Set<Employee> mapSet(ResultSet resultSet) {
         Set<Employee> result = new HashSet<>();
         try {
             while (resultSet.next()) {
                 result.add(getEmployee(resultSet));
             }
         } catch (SQLException sqlEx) {
-            LOGGER.log(Level.SEVERE, "Exception: ", sqlEx);
-            throw sqlEx;
+            LOGGER.log(Level.SEVERE, EXCEPTION_LOG_FORMAT, sqlEx);
         }
         return result;
     }
